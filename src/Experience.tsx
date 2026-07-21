@@ -1,5 +1,6 @@
 import { OrbitControls } from "@react-three/drei";
 import Hedgehog from "./components/hedgehog/hedgehog";
+import Tree from "./components/tree/Tree";
 
 export default function Experience() {
     return (
@@ -28,6 +29,9 @@ export default function Experience() {
 
             // Hedgehog
             <Hedgehog />
+
+            // Tree
+            <Tree id={1} />
         </>
     );
 }
