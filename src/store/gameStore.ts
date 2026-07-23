@@ -1,24 +1,43 @@
 import { create } from "zustand";
 import * as THREE from "three";
 
-interface AttachPoint {
+interface Tree {
     id: number;
-    ref: React.RefObject<THREE.Object3D | null>;
+    position: [number, number, number];
+}
+
+interface Apple {
+    id: number;
+    treeId: number;
+    anchorPos: [number, number, number];
+    state: "attached" | "falling" | "delivered" | "floor" | "carried";
 }
 
 interface GameStore {
-    trees: Record<number, {id: number, attachPoints: AttachPoint[]}>;
-    registerTree: (id: number, attachPoints: AttachPoint[]) => void;
-    unregisterTree: (id: number) => void;
+    // Trees
+    trees: Record<number, Tree>;
+    registerTree: (id: number, position: [number, number, number]) => void;
+
+    // Apples
+    apples: Record<number, Apple>;
+    nextAppleId: number;
+    registerApple: (treeId: number, anchorPos: [number, number, number]) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
+    // Trees
     trees: {},
-    registerTree: (id, attachPoints) => set((state) => ({ trees: { ...state.trees, [id]: { id, attachPoints } } })),
-    unregisterTree: (id) =>
-        set((state) => {
-            const { [id]: _, ...rest } = state.trees;
-            return { trees: rest };
-        }),
+    registerTree: (id: number, position: [number, number, number]) => set((state) => ({ trees: { ...state.trees, [id]: { id, position } } })),
+
+    // Apples
+    apples: {},
+    nextAppleId: 1,
+    registerApple: (treeId: number, anchorPos: [number, number, number]) => set((state) => {
+        const id = state.nextAppleId;
+        return {
+            nextAppleId: id + 1,
+            apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached" } }
+        }
+    })
 }));
 
