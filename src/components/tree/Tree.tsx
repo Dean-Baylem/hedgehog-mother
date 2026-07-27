@@ -1,8 +1,9 @@
 import { useGLTF } from "@react-three/drei";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { MeshSurfaceSampler } from "three/addons/math/MeshSurfaceSampler.js";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
+import { RigidBody } from "@react-three/rapier";
 
 
 export default function Tree({id, position}: {id: number, position: [number, number, number]}) {
@@ -10,6 +11,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
     const trunk = nodes.CommonTree_2.children[0] as THREE.Mesh;
     const leaves = nodes.CommonTree_2.children[1] as THREE.Mesh;
     const { registerTree, registerApple } = useGameStore();
+    const initialised = useRef(false);
 
     // Create random apple positions
     const attachPositions = useMemo(() => {
@@ -25,29 +27,37 @@ export default function Tree({id, position}: {id: number, position: [number, num
     // Id & Position static for tree's lifetime.
     useEffect(() => {
         registerTree(id, position);
-        console.log(`Attach Positions: ${attachPositions}`);
+        if (initialised.current) return;
+
         attachPositions.forEach((pos) => {
             registerApple(id, pos);
-        })
+        });
+
+        initialised.current = true;
     }, []);
 
     return (
-        <group position={position} scale={0.5}>
-            <mesh
-                geometry={trunk.geometry}
-                material={trunk.material}
-                position={trunk.position}
-                rotation={trunk.rotation}
-                scale={trunk.scale}
-            />
+        <RigidBody type="fixed">
+            <group
+                position={position}
+                scale={0.5}
+            >
+                <mesh
+                    geometry={trunk.geometry}
+                    material={trunk.material}
+                    position={trunk.position}
+                    rotation={trunk.rotation}
+                    scale={trunk.scale}
+                />
 
-            <mesh
-                geometry={leaves.geometry}
-                material={leaves.material}
-                position={leaves.position}
-                rotation={leaves.rotation}
-                scale={leaves.scale}
-            />
-        </group>
+                <mesh
+                    geometry={leaves.geometry}
+                    material={leaves.material}
+                    position={leaves.position}
+                    rotation={leaves.rotation}
+                    scale={leaves.scale}
+                />
+            </group>
+        </RigidBody>
     );
 }

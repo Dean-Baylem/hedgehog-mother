@@ -27,17 +27,28 @@ interface GameStore {
 export const useGameStore = create<GameStore>((set) => ({
     // Trees
     trees: {},
-    registerTree: (id: number, position: [number, number, number]) => set((state) => ({ trees: { ...state.trees, [id]: { id, position } } })),
+    registerTree: (id, position) =>
+        set((state) => {
+            if (state.trees[id]) return state;
+
+            return {
+                trees: {
+                    ...state.trees,
+                    [id]: { id, position },
+                },
+            };
+        }),
 
     // Apples
     apples: {},
     nextAppleId: 1,
-    registerApple: (treeId: number, anchorPos: [number, number, number]) => set((state) => {
-        const id = state.nextAppleId;
-        return {
-            nextAppleId: id + 1,
-            apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached" } }
-        }
-    })
+    registerApple: (treeId: number, anchorPos: [number, number, number]) =>
+        set((state) => {
+            const id = state.nextAppleId;
+            return {
+                nextAppleId: id + 1,
+                apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached" } },
+            };
+        }),
 }));
 

@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 import { useControls } from "leva";
+import { RigidBody } from "@react-three/rapier";
 
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
@@ -48,9 +49,11 @@ export default function Hedgehog() {
     });
 
     return (
-        <primitive
-            object={scene}
-            ref={hedgehogRef}
-        />
+        <RigidBody>
+            <primitive
+                object={scene}
+                ref={hedgehogRef}
+            />
+        </RigidBody>
     );
 }
