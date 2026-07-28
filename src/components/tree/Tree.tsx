@@ -37,7 +37,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
     }, []);
 
     return (
-        <RigidBody type="fixed">
+        <RigidBody type="fixed" colliders="hull">
             <group
                 position={position}
                 scale={0.5}
