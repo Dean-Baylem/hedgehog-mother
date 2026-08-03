@@ -3,14 +3,13 @@ import { useMemo, useEffect, useRef } from "react";
 import { MeshSurfaceSampler } from "three/addons/math/MeshSurfaceSampler.js";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
-import { RigidBody } from "@react-three/rapier";
-
+import { RigidBody, CuboidCollider, type CollisionPayload } from "@react-three/rapier";
 
 export default function Tree({id, position}: {id: number, position: [number, number, number]}) {
     const { nodes } = useGLTF("/models/trees/tree1.glb");
     const trunk = nodes.CommonTree_2.children[0] as THREE.Mesh;
     const leaves = nodes.CommonTree_2.children[1] as THREE.Mesh;
-    const { registerTree, registerApple } = useGameStore();
+    const { registerTree, registerApple, setCloseTreeId } = useGameStore();
     const initialised = useRef(false);
 
     // Create random apple positions
@@ -36,12 +35,35 @@ export default function Tree({id, position}: {id: number, position: [number, num
         initialised.current = true;
     }, []);
 
+    const handleIntersectionEnter = (event: CollisionPayload) => {
+        const otherBody = event.other.rigidBodyObject;
+
+        if (!otherBody) return;
+
+        const userData = otherBody.userData as { type: string; treeId?: number };
+        if (userData.type !== "hedgehog") return;
+
+        setCloseTreeId(id);
+    }
+
+    const handleIntersectionExit = (event: CollisionPayload) => {
+        const otherBody = event.other.rigidBodyObject;
+
+        if (!otherBody) return;
+
+        const userData = otherBody.userData as { type: string; treeId?: number };
+        if (userData.type !== "hedgehog") return;
+        setCloseTreeId(0);
+    }
+
     return (
-        <RigidBody type="fixed" colliders="hull">
-            <group
-                position={position}
-                scale={0.5}
-            >
+        <RigidBody
+            type="fixed"
+            colliders={false}
+            userData={{ treeId: id }}
+            position={position}
+        >
+            <group scale={0.5}>
                 <mesh
                     geometry={trunk.geometry}
                     material={trunk.material}
@@ -49,7 +71,6 @@ export default function Tree({id, position}: {id: number, position: [number, num
                     rotation={trunk.rotation}
                     scale={trunk.scale}
                 />
-
                 <mesh
                     geometry={leaves.geometry}
                     material={leaves.material}
@@ -58,6 +79,15 @@ export default function Tree({id, position}: {id: number, position: [number, num
                     scale={leaves.scale}
                 />
             </group>
+            <CuboidCollider
+                name={`tree-sensor-${id}`}
+                args={[0.8, 0.2, 0.8]}
+                position={[0, 0.2, 0]}
+                onIntersectionEnter={handleIntersectionEnter}
+                onIntersectionExit={handleIntersectionExit}
+                sensor
+            />
+            <CuboidCollider args={[0.35, 0.1, 0.35]} position={[0, 0.1, 0]} />
         </RigidBody>
     );
 }

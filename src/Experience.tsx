@@ -3,7 +3,7 @@ import Hedgehog from "./components/hedgehog/hedgehog";
 import Tree from "./components/tree/Tree";
 import { useGameStore } from "./store/gameStore";
 import Apple from "./components/apple/Apple";
-import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
+import { Physics, RigidBody } from "@react-three/rapier";
 
 export default function Experience() {
     const apples = useGameStore((state) => state.apples);

@@ -1,31 +1,84 @@
 import { useGLTF, useKeyboardControls } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { useControls } from "leva";
-import { RigidBody } from "@react-three/rapier";
+import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type {RapierRigidBody} from "@react-three/rapier";
+import { useGameStore } from "../../store/gameStore";
 
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
+    const { closeTreeId } = useGameStore();
 
+    // Hedgehog Details
     const rotationY = useRef(0);
     const quaternion = useRef(new THREE.Quaternion());
     const direction = useRef(new THREE.Vector3());
     const velocity = useRef(new THREE.Vector3());
     const currentPosition = useRef(new THREE.Vector3());
 
+    // Camera Details
     const { offsetX, offsetY, offsetZ } = useControls("CameraOffset", {
         offsetX: { value: -3, min: -10, max: 10, step: 0.1 },
         offsetY: { value: 1.0, min: -10, max: 10, step: 0.1 },
         offsetZ: { value: 0, min: -10, max: 10, step: 0.1 },
     });
-
     const cameraOffset = new THREE.Vector3(offsetX, offsetY, offsetZ);
     const desiredPosition = new THREE.Vector3();
-    const [, get] = useKeyboardControls();
 
+    // Keyboard
+    const [subscribe, get] = useKeyboardControls();
+
+    const isFacingTree = (treeId: number) => {
+        const tree = useGameStore.getState().trees[treeId];
+        if (!tree) return false;
+
+        const hedgehogPosition = hedgehogRef.current?.translation();
+        if (!hedgehogPosition) return false;
+
+        const treePosition = new THREE.Vector3(...tree.position);
+        const directionToTree = treePosition.clone().sub(hedgehogPosition).normalize();
+        const hedgehogDirection = new THREE.Vector3(1, 0, 0).applyQuaternion(hedgehogRef.current?.rotation() || new THREE.Quaternion());
+
+        return directionToTree.dot(hedgehogDirection) > 0.8;
+    };
+
+    /**
+     * Attempt to hit the closest tree.
+     */
+    const attemptTreeHit = () => {
+        const tree = useGameStore.getState().trees[closeTreeId];
+
+        if (!tree) return false;
+
+        const hitSuccessful = isFacingTree(closeTreeId);
+
+        if (hitSuccessful) {
+            console.log(`Hit tree ${closeTreeId}`);
+        } else {
+            console.log("Not facing the tree, cannot hit.");
+        }
+
+        return hitSuccessful;
+    };
+    
+    /**
+     * Keyboard subscription to listen for the "hit" action and attempt to hit the closest tree when pressed.
+     */
+    useEffect(() => {
+        const unsubscribe = subscribe((state) => state.hit, (pressed) => {
+            if (pressed) {
+                console.log(`Tree ID: ${closeTreeId}`);
+                attemptTreeHit();
+            }
+        });
+
+        return unsubscribe;
+    }, [subscribe, closeTreeId]);
+
+    // Movement
     useFrame((state, delta) => {
         if (!hedgehogRef.current) return;
 
@@ -60,8 +113,20 @@ export default function Hedgehog() {
     });
 
     return (
-        <RigidBody ref={hedgehogRef} type="dynamic" colliders="hull" gravityScale={0} enabledRotations={[false, true, false]} linearDamping={0.5}>
-            <primitive object={scene} />
+        <RigidBody
+            ref={hedgehogRef}
+            type="dynamic"
+            colliders={false}
+            gravityScale={0}
+            enabledRotations={[false, true, false]}
+            linearDamping={0.5}
+            userData={{ type: "hedgehog" }}
+        >
+            <primitive
+                object={scene}
+                scale={0.5}
+            />
+            <CuboidCollider args={[0.18, 0.1, 0.1]} position={[-0.01, 0.1, 0]}/>
         </RigidBody>
     );
 }

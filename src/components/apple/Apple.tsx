@@ -9,7 +9,10 @@ export default function Apple({id}: {id: number}) {
     const ref = useRef<any>(null);
 
     return (
-        <RigidBody type={apple.state === 'falling' || apple.state === 'floor' ? 'dynamic' : apple.state === 'carried' ? 'kinematicPosition' : 'fixed'}>
+        <RigidBody
+            type={apple.state === "falling" || apple.state === "floor" ? "dynamic" : apple.state === "carried" ? "kinematicPosition" : "fixed"}
+            userData={{ type: "apple", appleId: id }}
+        >
             <mesh position={apple.anchorPos}>
                 <sphereGeometry args={[0.1, 16, 16]} />
                 <meshStandardMaterial color="red" />
