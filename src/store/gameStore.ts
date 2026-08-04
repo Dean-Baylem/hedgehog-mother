@@ -19,6 +19,7 @@ interface GameStore {
     closeTreeId: number;
     registerTree: (id: number, position: [number, number, number]) => void;
     setCloseTreeId: (id: number) => void;
+    hitTree: (treeId: number) => void;
 
     // Apples
     apples: Record<number, Apple>;
@@ -41,8 +42,22 @@ export const useGameStore = create<GameStore>((set) => ({
                 },
             };
         }),
-    
+
     setCloseTreeId: (id: number) => set({ closeTreeId: id }),
+    hitTree: (treeId: number) =>
+        set((state) => {
+            const apple = Object.values(state.apples).find((apple) => apple.treeId === treeId && apple.state === "attached");
+            if (!apple) return state;
+            return {
+                apples: {
+                    ...state.apples,
+                    [apple.id]: {
+                        ...apple,
+                        state: "falling",
+                    },
+                },
+            };
+        }),
 
     // Apples
     apples: {},

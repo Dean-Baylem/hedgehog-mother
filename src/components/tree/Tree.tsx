@@ -3,7 +3,7 @@ import { useMemo, useEffect, useRef } from "react";
 import { MeshSurfaceSampler } from "three/addons/math/MeshSurfaceSampler.js";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
-import { RigidBody, CuboidCollider, type CollisionPayload } from "@react-three/rapier";
+import { RigidBody, CuboidCollider, CylinderCollider, type CollisionPayload } from "@react-three/rapier";
 
 export default function Tree({id, position}: {id: number, position: [number, number, number]}) {
     const { nodes } = useGLTF("/models/trees/tree1.glb");
@@ -18,7 +18,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
         return Array.from({length: Math.floor(Math.random() * 4) + 1}, (_, i) => i).map(() => {
             const v = new THREE.Vector3();
             sampler.sample(v);
-            v.multiplyScalar(0.5).add(new THREE.Vector3(...position));
+            v.multiplyScalar(0.8).add(new THREE.Vector3(...position));
             return v.toArray() as [number, number, number];
         });
     }, [leaves, position]);
@@ -63,7 +63,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
             userData={{ treeId: id }}
             position={position}
         >
-            <group scale={0.5}>
+            <group scale={0.8}>
                 <mesh
                     geometry={trunk.geometry}
                     material={trunk.material}
@@ -81,13 +81,16 @@ export default function Tree({id, position}: {id: number, position: [number, num
             </group>
             <CuboidCollider
                 name={`tree-sensor-${id}`}
-                args={[0.8, 0.2, 0.8]}
+                args={[1, 0.2, 1]}
                 position={[0, 0.2, 0]}
                 onIntersectionEnter={handleIntersectionEnter}
                 onIntersectionExit={handleIntersectionExit}
                 sensor
             />
-            <CuboidCollider args={[0.35, 0.1, 0.35]} position={[0, 0.1, 0]} />
+            <CylinderCollider
+                args={[0.1, 0.5]}
+                position={[0, 0.1, 0]}
+            />
         </RigidBody>
     );
 }

@@ -10,7 +10,7 @@ import { useGameStore } from "../../store/gameStore";
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
-    const { closeTreeId } = useGameStore();
+    const { closeTreeId, hitTree } = useGameStore();
 
     // Hedgehog Details
     const rotationY = useRef(0);
@@ -57,6 +57,7 @@ export default function Hedgehog() {
 
         if (hitSuccessful) {
             console.log(`Hit tree ${closeTreeId}`);
+            hitTree(closeTreeId);
         } else {
             console.log("Not facing the tree, cannot hit.");
         }
