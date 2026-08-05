@@ -4,13 +4,21 @@ import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { useControls } from "leva";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
-import type {RapierRigidBody} from "@react-three/rapier";
+import type { RapierRigidBody, CollisionPayload } from "@react-three/rapier";
 import { useGameStore } from "../../store/gameStore";
+import Apple from "../apple/Apple";
+
+const appleSlots: [number, number, number][] = [
+    [0.06, 0.28, 0.08],
+    [-0.03, 0.3, -0.09],
+    [-0.14, 0.25, 0.08],
+    [-0.23, 0.25, -0.03],
+];
 
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
-    const { closeTreeId, hitTree } = useGameStore();
+    const { closeTreeId, hitTree, apples, attachAppleToHedgehog } = useGameStore();
 
     // Hedgehog Details
     const rotationY = useRef(0);
@@ -64,17 +72,20 @@ export default function Hedgehog() {
 
         return hitSuccessful;
     };
-    
+
     /**
      * Keyboard subscription to listen for the "hit" action and attempt to hit the closest tree when pressed.
      */
     useEffect(() => {
-        const unsubscribe = subscribe((state) => state.hit, (pressed) => {
-            if (pressed) {
-                console.log(`Tree ID: ${closeTreeId}`);
-                attemptTreeHit();
-            }
-        });
+        const unsubscribe = subscribe(
+            (state) => state.hit,
+            (pressed) => {
+                if (pressed) {
+                    console.log(`Tree ID: ${closeTreeId}`);
+                    attemptTreeHit();
+                }
+            },
+        );
 
         return unsubscribe;
     }, [subscribe, closeTreeId]);
@@ -113,6 +124,23 @@ export default function Hedgehog() {
         // state.camera.lookAt(currentPosition.current);
     });
 
+    // Handle The collisions between the hedgehog and the apples.
+    const handleCollisionEnter = (event: CollisionPayload) => {
+        const carriedCount = Object.values(apples).filter((apple) => apple.state === "carried").length;
+        if (carriedCount >= appleSlots.length) return;
+
+        const otherBody = event.other.rigidBodyObject;
+
+        if (!otherBody) return;
+
+        const userData = otherBody.userData;
+        if (userData.type === "apple" && userData.appleId) {
+            console.log(`Hedgehog collided with apple ${userData.appleId}`);
+            console.log(`Position: ${appleSlots[carriedCount]}`);
+            attachAppleToHedgehog(userData.appleId, appleSlots[carriedCount]);
+        }
+    };
+
     return (
         <RigidBody
             ref={hedgehogRef}
@@ -125,9 +153,22 @@ export default function Hedgehog() {
         >
             <primitive
                 object={scene}
-                scale={0.5}
+                scale={0.8}
             />
-            <CuboidCollider args={[0.18, 0.1, 0.1]} position={[-0.01, 0.1, 0]}/>
+            <CuboidCollider
+                args={[0.28, 0.15, 0.17]}
+                position={[-0.02, 0.15, 0]}
+                onCollisionEnter={handleCollisionEnter}
+            />
+            {apples &&
+                Object.values(apples)
+                    .filter((apple) => apple.state === "carried" && apple.attachedSlot)
+                    .map((apple) => (
+                        <Apple
+                            key={apple.id}
+                            id={apple.id}
+                        />
+                    ))}
         </RigidBody>
     );
 }

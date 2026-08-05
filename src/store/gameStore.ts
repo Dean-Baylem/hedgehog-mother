@@ -11,6 +11,7 @@ interface Apple {
     treeId: number;
     anchorPos: [number, number, number];
     state: "attached" | "falling" | "delivered" | "floor" | "carried";
+    attachedSlot?: [number, number, number];
 }
 
 interface GameStore {
@@ -25,6 +26,8 @@ interface GameStore {
     apples: Record<number, Apple>;
     nextAppleId: number;
     registerApple: (treeId: number, anchorPos: [number, number, number]) => void;
+    updateAppleState: (appleId: number, newState: Apple["state"]) => void;
+    attachAppleToHedgehog: (appleId: number, position: [number, number, number]) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -70,5 +73,34 @@ export const useGameStore = create<GameStore>((set) => ({
                 apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached" } },
             };
         }),
+
+    updateAppleState: (appleId: number, newState: Apple["state"]) =>
+        set((state) => {
+            const apple = state.apples[appleId];
+            if (!apple) return state;
+            return {
+                apples: {
+                    ...state.apples,
+                    [appleId]: {
+                        ...apple,
+                        state: newState,
+                    },
+                },
+            };
+        }),
+    attachAppleToHedgehog: (appleId: number, position: [number, number, number]) => set((state) => {
+        const apple = state.apples[appleId];
+        if (!apple) return state;
+        return {
+            apples: {
+                ...state.apples,
+                [appleId]: {
+                    ...apple,
+                    state: "carried",
+                    attachedSlot: position,
+                },
+            },
+        };
+    })
 }));
 

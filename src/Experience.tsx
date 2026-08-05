@@ -22,7 +22,10 @@ export default function Experience() {
             />
             <Physics debug>
                 {/* Floor */}
-                <RigidBody type="fixed">
+                <RigidBody
+                    type="fixed"
+                    userData={{ type: "floor" }}
+                >
                     <mesh
                         receiveShadow
                         position-y={-0.25}
@@ -38,13 +41,19 @@ export default function Experience() {
                     id={1}
                     position={[1, 0, 1]}
                 />
+                <Tree
+                    id={2}
+                    position={[4, 0, 1]}
+                />
                 {/* Apples */}
-                {Object.values(apples).map((apple) => (
-                    <Apple
-                        key={apple.id}
-                        id={apple.id}
-                    />
-                ))}
+                {Object.values(apples)
+                    .filter((apple) => apple.state === "attached" || apple.state === "falling" || apple.state === "floor")
+                    .map((apple) => (
+                        <Apple
+                            key={apple.id}
+                            id={apple.id}
+                        />
+                    ))}
             </Physics>
         </>
     );
