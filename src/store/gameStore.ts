@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import * as THREE from "three";
 
 interface Tree {
     id: number;
@@ -12,6 +11,7 @@ interface Apple {
     anchorPos: [number, number, number];
     state: "attached" | "falling" | "delivered" | "floor" | "carried";
     attachedSlot?: [number, number, number];
+    appleColor: string;
 }
 
 interface GameStore {
@@ -28,6 +28,7 @@ interface GameStore {
     registerApple: (treeId: number, anchorPos: [number, number, number]) => void;
     updateAppleState: (appleId: number, newState: Apple["state"]) => void;
     attachAppleToHedgehog: (appleId: number, position: [number, number, number]) => void;
+    deliverApplesFromHedgehog: () => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -70,7 +71,7 @@ export const useGameStore = create<GameStore>((set) => ({
             const id = state.nextAppleId;
             return {
                 nextAppleId: id + 1,
-                apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached" } },
+                apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached", appleColor: "red" } },
             };
         }),
 
@@ -99,6 +100,18 @@ export const useGameStore = create<GameStore>((set) => ({
                     state: "carried",
                     attachedSlot: position,
                 },
+            },
+        };
+    }),
+
+    deliverApplesFromHedgehog: () => set((state) => {
+        const apples = Object.values(state.apples).filter((apple) => apple.state === "carried");
+        if (apples.length === 0) return state;
+
+        return {
+            apples: {
+                ...state.apples,
+                ...apples.reduce((acc, apple) => ({ ...acc, [apple.id]: { ...apple, state: "delivered" } }), {}),
             },
         };
     })
