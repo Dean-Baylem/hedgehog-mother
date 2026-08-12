@@ -17,7 +17,7 @@ function App() {
   return (
       <StrictMode>
           <KeyboardControls map={controlsMap}>
-              <Canvas>
+              <Canvas shadows camera={{ position: [0, 5, 10], fov: 50 }}>
                   <Suspense fallback={null}>
                       <Experience />
                   </Suspense>

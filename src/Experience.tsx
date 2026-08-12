@@ -4,6 +4,7 @@ import Tree from "./components/tree/Tree";
 import { useGameStore } from "./store/gameStore";
 import Apple from "./components/apple/Apple";
 import { Physics, RigidBody } from "@react-three/rapier";
+import Burrow from "./components/burrow/Burrow";
 
 export default function Experience() {
     const apples = useGameStore((state) => state.apples);
@@ -12,6 +13,16 @@ export default function Experience() {
         <>
             {/* Lighting */}
             <ambientLight intensity={0.5} />
+            <directionalLight
+                castShadow
+                position={[5, 15, 5]}
+                shadow-mapSize={[2048, 2048]}
+                shadow-camera-far={50}
+                shadow-camera-left={-10}
+                shadow-camera-right={10}
+                shadow-camera-top={10}
+                shadow-camera-bottom={-10}
+            />
             {/* Controls */}
             <OrbitControls
                 makeDefault
@@ -39,11 +50,11 @@ export default function Experience() {
                 {/* Tree */}
                 <Tree
                     id={1}
-                    position={[1, 0, 1]}
+                    position={[5, 0, 5]}
                 />
                 <Tree
                     id={2}
-                    position={[4, 0, 1]}
+                    position={[3, 0, -1]}
                 />
                 {/* Apples */}
                 {Object.values(apples)
@@ -54,6 +65,8 @@ export default function Experience() {
                             id={apple.id}
                         />
                     ))}
+                {/* Burrow */}
+                <Burrow position={[0, 0, -5]} />
             </Physics>
         </>
     );
