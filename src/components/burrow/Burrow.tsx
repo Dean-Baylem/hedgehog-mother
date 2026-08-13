@@ -4,7 +4,17 @@ import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
 
-export default function Burrow({position}: {position: [number, number, number]}) {
+const getDisplayedAppleCount = (count: number) => {
+    const displayThresholds = [10, 15, 20];
+
+    for (let i = 0; i < displayThresholds.length; i++) {
+        if (count < displayThresholds[i]) return displayThresholds[i];
+    }
+
+    return displayThresholds[displayThresholds.length - 1];
+};
+
+export default function Burrow({ position }: { position: [number, number, number] }) {
     const { scene } = useGLTF("/models/burrow/burrow.glb");
     const ref = useRef<RapierRigidBody>(null);
     const { deliverApplesFromHedgehog, apples } = useGameStore();
@@ -27,13 +37,38 @@ export default function Burrow({position}: {position: [number, number, number]})
         if (userData.type !== "hedgehog") return;
 
         deliverApplesFromHedgehog();
-    }
+    };
+
+    // const deliveredApples = Object.values(apples).filter((apple) => apple.state === "delivered");
 
     return (
-        <RigidBody ref={ref} type="fixed" userData={{ type: "burrow" }} colliders={false} position={position}>
-            <primitive object={scene} />
-            <CylinderCollider args={[0.5, 1.0]} position={[0, 0.5, 0]} />
-            <CuboidCollider args={[0.5, 0.5, 0.2]} position={[-0.05, 0.25, 1.1]} sensor onIntersectionEnter={handleIntersectionEnter} />
-        </RigidBody>
-    )
+        <group position={position}>
+            <RigidBody
+                ref={ref}
+                type="fixed"
+                userData={{ type: "burrow" }}
+                colliders="trimesh"
+            >
+                <primitive object={scene} />
+                <CuboidCollider
+                    args={[0.5, 0.5, 0.2]}
+                    position={[-0.05, 0.25, 1.1]}
+                    sensor
+                    onIntersectionEnter={handleIntersectionEnter}
+                />
+            </RigidBody>
+            {Array.from({ length: 100 }).map((_, i) => (
+                <RigidBody
+                    type="dynamic"
+                    position={[0, 0.5, 0]}
+                    ccd
+                >
+                    <mesh>
+                        <sphereGeometry args={[0.08, 16, 16]} />
+                        <meshBasicMaterial color="red" />
+                    </mesh>
+                </RigidBody>
+            ))}
+        </group>
+    );
 }

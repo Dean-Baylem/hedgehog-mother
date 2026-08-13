@@ -81,7 +81,6 @@ export default function Hedgehog() {
             (state) => state.hit,
             (pressed) => {
                 if (pressed) {
-                    console.log(`Tree ID: ${closeTreeId}`);
                     attemptTreeHit();
                 }
             },
@@ -135,8 +134,6 @@ export default function Hedgehog() {
 
         const userData = otherBody.userData;
         if (userData.type === "apple" && userData.appleId) {
-            console.log(`Hedgehog collided with apple ${userData.appleId}`);
-            console.log(`Position: ${appleSlots[carriedCount]}`);
             attachAppleToHedgehog(userData.appleId, appleSlots[carriedCount]);
         }
     };
@@ -147,8 +144,9 @@ export default function Hedgehog() {
             type="dynamic"
             colliders={false}
             gravityScale={0}
+            linearDamping={4}
+            angularDamping={4}
             enabledRotations={[false, true, false]}
-            linearDamping={0.5}
             userData={{ type: "hedgehog" }}
         >
             <primitive
