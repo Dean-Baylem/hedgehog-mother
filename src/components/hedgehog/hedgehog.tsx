@@ -7,6 +7,7 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { RapierRigidBody, CollisionPayload } from "@react-three/rapier";
 import { useGameStore } from "../../store/gameStore";
 import Apple from "../apple/Apple";
+import CarriedApple from "../apple/CarriedApple";
 
 const appleSlots: [number, number, number][] = [
     [0.06, 0.28, 0.08],
@@ -18,7 +19,8 @@ const appleSlots: [number, number, number][] = [
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
-    const { closeTreeId, hitTree, apples, attachAppleToHedgehog } = useGameStore();
+    const appleRefs = useRef<Record<number, THREE.Mesh>>({});
+    const { closeTreeId, hitTree, apples, attachAppleToHedgehog, applesSwitchCarriedToDelivered } = useGameStore();
 
     // Hedgehog Details
     const rotationY = useRef(0);
@@ -138,6 +140,22 @@ export default function Hedgehog() {
         }
     };
 
+    const handleIntersectionEnter = (event: CollisionPayload) => {
+        const otherBody = event.other.rigidBodyObject;
+
+        if (!otherBody) return;
+
+        const userData = otherBody.userData as { type: string };
+        if (userData.type !== "burrow") return;
+
+        console.log("Entered the burrow area");
+
+        if (Object.values(appleRefs.current).length > 0) {
+            applesSwitchCarriedToDelivered(appleRefs.current);
+        }
+
+    };
+
     return (
         <RigidBody
             ref={hedgehogRef}
@@ -157,14 +175,22 @@ export default function Hedgehog() {
                 args={[0.28, 0.15, 0.17]}
                 position={[-0.02, 0.15, 0]}
                 onCollisionEnter={handleCollisionEnter}
+                onIntersectionEnter={handleIntersectionEnter}
             />
             {apples &&
                 Object.values(apples)
                     .filter((apple) => apple.state === "carried" && apple.attachedSlot)
                     .map((apple) => (
-                        <Apple
+                        <CarriedApple
                             key={apple.id}
                             id={apple.id}
+                            ref={(object) => {
+                                if (object) {
+                                    appleRefs.current[apple.id] = object;
+                                } else {
+                                    delete appleRefs.current[apple.id];
+                                }
+                            }}
                         />
                     ))}
         </RigidBody>

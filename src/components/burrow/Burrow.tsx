@@ -3,6 +3,7 @@ import { CuboidCollider, CylinderCollider, RapierRigidBody, RigidBody, type Coll
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
+import DeliveredApple from "../apple/DeliveredApple";
 
 const getDisplayedAppleCount = (count: number) => {
     const displayThresholds = [10, 15, 20];
@@ -17,7 +18,7 @@ const getDisplayedAppleCount = (count: number) => {
 export default function Burrow({ position }: { position: [number, number, number] }) {
     const { scene } = useGLTF("/models/burrow/burrow.glb");
     const ref = useRef<RapierRigidBody>(null);
-    const { deliverApplesFromHedgehog, apples } = useGameStore();
+    const { apples } = useGameStore();
 
     useEffect(() => {
         scene.traverse((child) => {
@@ -28,47 +29,37 @@ export default function Burrow({ position }: { position: [number, number, number
         });
     }, [scene]);
 
-    const handleIntersectionEnter = (event: CollisionPayload) => {
-        const otherBody = event.other.rigidBodyObject;
-
-        if (!otherBody) return;
-
-        const userData = otherBody.userData as { type: string };
-        if (userData.type !== "hedgehog") return;
-
-        deliverApplesFromHedgehog();
-    };
-
-    // const deliveredApples = Object.values(apples).filter((apple) => apple.state === "delivered");
+    const deliveredApples = Object.values(apples).filter((apple) => apple.state === "delivered");
 
     return (
-        <group position={position}>
-            <RigidBody
-                ref={ref}
-                type="fixed"
-                userData={{ type: "burrow" }}
-                colliders="trimesh"
-            >
-                <primitive object={scene} />
-                <CuboidCollider
-                    args={[0.5, 0.5, 0.2]}
-                    position={[-0.05, 0.25, 1.1]}
-                    sensor
-                    onIntersectionEnter={handleIntersectionEnter}
-                />
-            </RigidBody>
-            {Array.from({ length: 100 }).map((_, i) => (
+        <>
+            <group position={position}>
                 <RigidBody
-                    type="dynamic"
-                    position={[0, 0.5, 0]}
-                    ccd
+                    ref={ref}
+                    type="fixed"
+                    userData={{ type: "burrow" }}
+                    colliders="trimesh"
                 >
-                    <mesh>
-                        <sphereGeometry args={[0.08, 16, 16]} />
-                        <meshBasicMaterial color="red" />
-                    </mesh>
+                    <primitive object={scene} />
+                    <CuboidCollider
+                        args={[0.5, 0.5, 0.2]}
+                        position={[-0.05, 0.25, 1.1]}
+                        sensor
+                    />
                 </RigidBody>
-            ))}
-        </group>
+            </group>
+            {deliveredApples.map((apple) => {
+                console.log(apple);
+                if (!apple.deliverStartPos) return null;
+
+                return (
+                    <DeliveredApple
+                        key={`deliveredApple-${apple.id}`}
+                        id={apple.id}
+                        position={[apple.deliverStartPos.x, apple.deliverStartPos.y, apple.deliverStartPos.z]}
+                    />
+                );
+            })}
+        </>
     );
 }

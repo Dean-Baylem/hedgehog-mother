@@ -44,15 +44,6 @@ export default function Apple({id}: {id: number}) {
         }
     }
 
-    if (apple.state === "carried" && apple.attachedSlot) {
-        return (
-            <mesh position={[apple.attachedSlot[0], apple.attachedSlot[1], apple.attachedSlot[2]]}>
-                <sphereGeometry args={[0.08, 16, 16]} />
-                <meshStandardMaterial color="red" />
-            </mesh>
-        );
-    }
-
     useFrame(() => {
         if ((apple.state !== 'falling' && apple.state !== 'attached') || !ref.current || !shadowRef.current) return;
 

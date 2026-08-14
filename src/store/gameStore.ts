@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import * as THREE from "three";
 
 interface Tree {
     id: number;
@@ -12,6 +13,7 @@ interface Apple {
     state: "attached" | "falling" | "delivered" | "floor" | "carried";
     attachedSlot?: [number, number, number];
     appleColor: string;
+    deliverStartPos?: THREE.Vector3;
 }
 
 interface GameStore {
@@ -28,7 +30,7 @@ interface GameStore {
     registerApple: (treeId: number, anchorPos: [number, number, number]) => void;
     updateAppleState: (appleId: number, newState: Apple["state"]) => void;
     attachAppleToHedgehog: (appleId: number, position: [number, number, number]) => void;
-    deliverApplesFromHedgehog: () => void;
+    applesSwitchCarriedToDelivered: (appleRefs: Record<number, THREE.Mesh>) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -89,31 +91,42 @@ export const useGameStore = create<GameStore>((set) => ({
                 },
             };
         }),
-    attachAppleToHedgehog: (appleId: number, position: [number, number, number]) => set((state) => {
-        const apple = state.apples[appleId];
-        if (!apple) return state;
-        return {
-            apples: {
-                ...state.apples,
-                [appleId]: {
-                    ...apple,
-                    state: "carried",
-                    attachedSlot: position,
+    attachAppleToHedgehog: (appleId: number, position: [number, number, number]) =>
+        set((state) => {
+            const apple = state.apples[appleId];
+            if (!apple) return state;
+            return {
+                apples: {
+                    ...state.apples,
+                    [appleId]: {
+                        ...apple,
+                        state: "carried",
+                        attachedSlot: position,
+                    },
                 },
-            },
-        };
-    }),
+            };
+        }),
 
-    deliverApplesFromHedgehog: () => set((state) => {
-        const apples = Object.values(state.apples).filter((apple) => apple.state === "carried");
-        if (apples.length === 0) return state;
+    applesSwitchCarriedToDelivered: (appleRefs) =>
+        set((state) => {
+            const apples = Object.values(state.apples).filter((apple) => apple.state === "carried");
+            if (apples.length === 0) return state;
 
-        return {
-            apples: {
-                ...state.apples,
-                ...apples.reduce((acc, apple) => ({ ...acc, [apple.id]: { ...apple, state: "delivered" } }), {}),
-            },
-        };
-    })
+            return {
+                apples: {
+                    ...state.apples,
+                    ...apples.reduce(
+                        (acc, apple) => ({
+                            ...acc,
+                            [apple.id]: {
+                                ...apple,
+                                state: "delivered",
+                                deliverStartPos: appleRefs[apple.id]?.getWorldPosition(new THREE.Vector3()),
+                            },
+                        }),
+                        {},
+                    ),
+                },
+            };
+        }),
 }));
-
