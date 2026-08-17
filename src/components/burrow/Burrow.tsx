@@ -22,6 +22,7 @@ export default function Burrow({ position }: { position: [number, number, number
     const deliveredApples = Object.values(apples).filter((apple) => apple.state === "delivered");
 
     return (
+        
         <>
             <group position={position}>
                 <RigidBody
