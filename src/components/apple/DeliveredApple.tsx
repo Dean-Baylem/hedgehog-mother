@@ -2,16 +2,16 @@ import { RigidBody } from "@react-three/rapier";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export default function DeliveredApple({id, position}: { id: number, position: [number, number, number] }) {
+export default function DeliveredApple({id, position, burrowPosition}: { id: number, position: [number, number, number], burrowPosition: [number, number, number] }) {
     const ref = useRef<any>(null);
     useEffect(() => {
         if (!ref.current) return;
 
         requestAnimationFrame(() => {
-            const target = new THREE.Vector3(0, 0, -5);
+            const target = new THREE.Vector3(...burrowPosition);
             const current = ref.current.translation();
             const direction = target.sub(new THREE.Vector3(current.x, current.y, current.z)).normalize();
-            const strength = 0.02;
+            const strength = 0.01;
             ref.current.applyImpulse({
                 x: direction.x * strength,
                 y: direction.y * strength,

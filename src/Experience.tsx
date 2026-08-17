@@ -66,7 +66,7 @@ export default function Experience() {
                         />
                     ))}
                 {/* Burrow */}
-                <Burrow position={[0, 0, -5]} />
+                <Burrow position={[-5, 0, -8]} />
             </Physics>
         </>
     );

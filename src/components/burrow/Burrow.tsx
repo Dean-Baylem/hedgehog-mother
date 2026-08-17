@@ -5,16 +5,6 @@ import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
 import DeliveredApple from "../apple/DeliveredApple";
 
-const getDisplayedAppleCount = (count: number) => {
-    const displayThresholds = [10, 15, 20];
-
-    for (let i = 0; i < displayThresholds.length; i++) {
-        if (count < displayThresholds[i]) return displayThresholds[i];
-    }
-
-    return displayThresholds[displayThresholds.length - 1];
-};
-
 export default function Burrow({ position }: { position: [number, number, number] }) {
     const { scene } = useGLTF("/models/burrow/burrow.glb");
     const ref = useRef<RapierRigidBody>(null);
@@ -57,6 +47,7 @@ export default function Burrow({ position }: { position: [number, number, number
                         key={`deliveredApple-${apple.id}`}
                         id={apple.id}
                         position={[apple.deliverStartPos.x, apple.deliverStartPos.y, apple.deliverStartPos.z]}
+                        burrowPosition={position}
                     />
                 );
             })}
