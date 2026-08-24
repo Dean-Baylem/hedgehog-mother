@@ -6,7 +6,6 @@ import { useControls } from "leva";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { RapierRigidBody, CollisionPayload } from "@react-three/rapier";
 import { useGameStore } from "../../store/gameStore";
-import Apple from "../apple/Apple";
 import CarriedApple from "../apple/CarriedApple";
 
 const appleSlots: [number, number, number][] = [
@@ -19,7 +18,7 @@ const appleSlots: [number, number, number][] = [
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
-    const appleRefs = useRef<Record<number, THREE.Mesh>>({});
+    const appleRefs = useRef<Record<number, THREE.Group>>({});
     const { closeTreeId, hitTree, apples, attachAppleToHedgehog, applesSwitchCarriedToDelivered } = useGameStore();
 
     // Hedgehog Details
@@ -66,10 +65,7 @@ export default function Hedgehog() {
         const hitSuccessful = isFacingTree(closeTreeId);
 
         if (hitSuccessful) {
-            console.log(`Hit tree ${closeTreeId}`);
             hitTree(closeTreeId);
-        } else {
-            console.log("Not facing the tree, cannot hit.");
         }
 
         return hitSuccessful;
@@ -92,7 +88,7 @@ export default function Hedgehog() {
     }, [subscribe, closeTreeId]);
 
     // Movement
-    useFrame((state, delta) => {
+    useFrame((_, delta) => {
         if (!hedgehogRef.current) return;
 
         const { forward, backward, left, right } = get();
@@ -150,7 +146,10 @@ export default function Hedgehog() {
 
         console.log("Entered the burrow area");
 
+        console.log(appleRefs.current);
+
         if (Object.values(appleRefs.current).length > 0) {
+            console.log("Switching apples to delivered");
             applesSwitchCarriedToDelivered(appleRefs.current);
         }
 

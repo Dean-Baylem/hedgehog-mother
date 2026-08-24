@@ -1,17 +1,17 @@
-import { RigidBody } from "@react-three/rapier";
+import { Clone, useGLTF } from "@react-three/drei";
+import { RigidBody, BallCollider } from "@react-three/rapier";
 import { useGameStore } from "../../store/gameStore";
 import { useRef, useEffect } from "react";
 import type { CollisionPayload } from "@react-three/rapier";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-export default function Apple({id}: {id: number}) {
+export default function Apple({ id }: { id: number }) {
     const apple = useGameStore((state) => state.apples[id]);
     const { updateAppleState } = useGameStore();
-    if (!apple) return null;
-
     const ref = useRef<any>(null);
     const shadowRef = useRef<THREE.Mesh>(null);
+    const { scene } = useGLTF(`/models/apples/apple-${apple.appleColor}.glb`);
 
     useEffect(() => {
         if (!ref.current || !apple) return;
@@ -32,6 +32,7 @@ export default function Apple({id}: {id: number}) {
         }
     }, [apple?.state]);
 
+
     const handleCollisionEnter = (event: CollisionPayload) => {
         const otherBody = event.other.rigidBodyObject;
 
@@ -42,10 +43,10 @@ export default function Apple({id}: {id: number}) {
             console.log(`Apple ${id} hit the floor`);
             updateAppleState(id, "floor");
         }
-    }
+    };
 
     useFrame(() => {
-        if ((apple.state !== 'falling' && apple.state !== 'attached') || !ref.current || !shadowRef.current) return;
+        if ((apple.state !== "falling" && apple.state !== "attached") || !ref.current || !shadowRef.current) return;
 
         // Update the shadow position to match the apple's x and z coordinates
         const position = ref.current.translation();
@@ -57,7 +58,9 @@ export default function Apple({id}: {id: number}) {
 
         const scale = Math.max(0.4, 0.5 - height * 0.4);
         shadowRef.current.scale.set(scale, scale, scale);
-    })
+    });
+
+    if (!apple) return null;
 
     return (
         <>
@@ -69,13 +72,8 @@ export default function Apple({id}: {id: number}) {
                 gravityScale={0.2}
                 onCollisionEnter={handleCollisionEnter}
             >
-                <mesh
-                    castShadow={apple.state !== "falling"}
-                    receiveShadow
-                >
-                    <sphereGeometry args={[0.08, 16, 16]} />
-                    <meshStandardMaterial color="red" />
-                </mesh>
+                <Clone object={scene} receiveShadow={apple.state !== "falling"} castShadow />
+                <BallCollider args={[0.08]} />
             </RigidBody>
             {(apple.state === "falling" || apple.state === "attached") && (
                 <mesh

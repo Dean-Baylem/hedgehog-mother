@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import * as THREE from "three";
+import getRandomAppleColor from "../utils/getRandomAppleColor";
 
 interface Tree {
     id: number;
@@ -30,7 +31,7 @@ interface GameStore {
     registerApple: (treeId: number, anchorPos: [number, number, number]) => void;
     updateAppleState: (appleId: number, newState: Apple["state"]) => void;
     attachAppleToHedgehog: (appleId: number, position: [number, number, number]) => void;
-    applesSwitchCarriedToDelivered: (appleRefs: Record<number, THREE.Mesh>) => void;
+    applesSwitchCarriedToDelivered: (appleRefs: Record<number, THREE.Group>) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -70,10 +71,11 @@ export const useGameStore = create<GameStore>((set) => ({
     nextAppleId: 1,
     registerApple: (treeId: number, anchorPos: [number, number, number]) =>
         set((state) => {
+            const color = getRandomAppleColor();
             const id = state.nextAppleId;
             return {
                 nextAppleId: id + 1,
-                apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached", appleColor: "red" } },
+                apples: { ...state.apples, [id]: { id, treeId, anchorPos, state: "attached", appleColor: color } },
             };
         }),
 
@@ -94,6 +96,7 @@ export const useGameStore = create<GameStore>((set) => ({
     attachAppleToHedgehog: (appleId: number, position: [number, number, number]) =>
         set((state) => {
             const apple = state.apples[appleId];
+            console.log("Hello?");
             if (!apple) return state;
             return {
                 apples: {
