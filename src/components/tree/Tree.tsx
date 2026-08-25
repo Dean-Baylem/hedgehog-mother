@@ -9,7 +9,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
     const { nodes } = useGLTF("/models/trees/tree1.glb");
     const trunk = nodes.CommonTree_2.children[0] as THREE.Mesh;
     const leaves = nodes.CommonTree_2.children[1] as THREE.Mesh;
-    const { registerTree, registerApple, setCloseTreeId } = useGameStore();
+    const { registerTree, registerApple, setCloseTreeId, closeTreeId } = useGameStore();
     const initialised = useRef(false);
 
     // Create random apple positions
@@ -53,7 +53,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
 
         const userData = otherBody.userData as { type: string; treeId?: number };
         if (userData.type !== "hedgehog") return;
-        setCloseTreeId(0);
+        if (closeTreeId === id) setCloseTreeId(0);
     }
 
     const vertices = [
@@ -63,6 +63,8 @@ export default function Tree({id, position}: {id: number, position: [number, num
         // apex
         0, 2.0, 0.2,
     ];
+
+    console.log(id);
 
     return (
         <RigidBody
@@ -93,7 +95,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
             </group>
             <CuboidCollider
                 name={`tree-sensor-${id}`}
-                args={[1, 0.2, 1]}
+                args={[0.8, 0.2, 0.8]}
                 position={[0, 0.2, 0]}
                 onIntersectionEnter={handleIntersectionEnter}
                 onIntersectionExit={handleIntersectionExit}

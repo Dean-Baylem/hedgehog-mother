@@ -5,9 +5,12 @@ import { useGameStore } from "./store/gameStore";
 import Apple from "./components/apple/Apple";
 import { Physics, RigidBody } from "@react-three/rapier";
 import Burrow from "./components/burrow/Burrow";
+import generateTreePositions from "./utils//generateTreePositions";
 
 export default function Experience() {
     const apples = useGameStore((state) => state.apples);
+    const treePositions = generateTreePositions(25, 0.1, 0.5);
+    console.log(treePositions);
 
     return (
         <>
@@ -48,14 +51,21 @@ export default function Experience() {
                 {/* Hedgehog */}
                 <Hedgehog />
                 {/* Tree */}
-                <Tree
+                {/* <Tree
                     id={1}
                     position={[5, 0, 5]}
                 />
                 <Tree
                     id={2}
                     position={[3, 0, -1]}
-                />
+                /> */}
+                {treePositions.map((pos, index) => (
+                    <Tree
+                        key={`${pos[0]}-${pos[2]}-${index}`}
+                        id={index}
+                        position={pos}
+                    />
+                ))}
                 {/* Apples */}
                 {Object.values(apples)
                     .filter((apple) => apple.state === "attached" || apple.state === "falling" || apple.state === "floor")
