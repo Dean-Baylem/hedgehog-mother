@@ -9,7 +9,7 @@ import generateTreePositions from "./utils//generateTreePositions";
 
 export default function Experience() {
     const apples = useGameStore((state) => state.apples);
-    const treePositions = generateTreePositions(25, 0.1, 0.5);
+    const treePositions = generateTreePositions(25, 0.1, 0.5, 3, 1, [{ x: 9, z: 1, radius: 0.5 }]);
     console.log(treePositions);
 
     return (
@@ -33,6 +33,7 @@ export default function Experience() {
                 maxDistance={30}
                 maxPolarAngle={Math.PI / 2}
                 enableDamping
+                enablePan={false}
             />
             <Physics debug>
                 {/* Floor */}
@@ -76,7 +77,7 @@ export default function Experience() {
                         />
                     ))}
                 {/* Burrow */}
-                <Burrow position={[-5, 0, -8]} />
+                <Burrow position={[9, 0, 1]} />
             </Physics>
         </>
     );

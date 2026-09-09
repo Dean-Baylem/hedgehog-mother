@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
 import DeliveredApple from "../apple/DeliveredApple";
+import { useControls } from "leva";
 
 export default function Burrow({ position }: { position: [number, number, number] }) {
     const { scene } = useGLTF("/models/burrow/burrow.glb");
@@ -22,9 +23,11 @@ export default function Burrow({ position }: { position: [number, number, number
     const deliveredApples = Object.values(apples).filter((apple) => apple.state === "delivered");
 
     return (
-        
         <>
-            <group position={position}>
+            <group
+                position={position}
+                rotation-y={-1.52}
+            >
                 <RigidBody
                     ref={ref}
                     type="fixed"

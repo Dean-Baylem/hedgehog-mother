@@ -1,8 +1,7 @@
 import { useGLTF, useKeyboardControls } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
-import { useControls } from "leva";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { RapierRigidBody, CollisionPayload } from "@react-three/rapier";
 import { useGameStore } from "../../store/gameStore";
@@ -14,6 +13,14 @@ const appleSlots: [number, number, number][] = [
     [-0.14, 0.25, 0.08],
     [-0.23, 0.25, -0.03],
 ];
+
+type OrbitControlsLike = {
+    target: THREE.Vector3;
+    update: () => void;
+    enabled: boolean;
+};
+
+const INITIAL_CAMERA_OFFSET = new THREE.Vector3(-4, 10, 8);
 
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
@@ -29,13 +36,10 @@ export default function Hedgehog() {
     const currentPosition = useRef(new THREE.Vector3());
 
     // Camera Details
-    const { offsetX, offsetY, offsetZ } = useControls("CameraOffset", {
-        offsetX: { value: -3, min: -10, max: 10, step: 0.1 },
-        offsetY: { value: 1.0, min: -10, max: 10, step: 0.1 },
-        offsetZ: { value: 0, min: -10, max: 10, step: 0.1 },
-    });
-    const cameraOffset = new THREE.Vector3(offsetX, offsetY, offsetZ);
-    const desiredPosition = new THREE.Vector3();
+    const controls = useThree((state) => state.controls) as OrbitControlsLike | null;
+    const smoothedTarget = useRef(new THREE.Vector3());
+    const frameDelta = useRef(new THREE.Vector3());
+    const initialised = useRef(false);
 
     // Keyboard
     const [subscribe, get] = useKeyboardControls();
@@ -88,7 +92,7 @@ export default function Hedgehog() {
     }, [subscribe, closeTreeId]);
 
     // Movement
-    useFrame((_, delta) => {
+    useFrame((state, delta) => {
         if (!hedgehogRef.current) return;
 
         const { forward, backward, left, right } = get();
@@ -114,11 +118,26 @@ export default function Hedgehog() {
         /**
          * Camera Management
          */
-        // const t = hedgehogRef.current.translation();
-        // currentPosition.current.set(t.x, t.y, t.z);
-        // desiredPosition.copy(cameraOffset).applyQuaternion(quaternion.current).add(currentPosition.current);
-        // state.camera.position.lerp(desiredPosition, 5 * delta);
-        // state.camera.lookAt(currentPosition.current);
+        if (!controls) return;
+
+        const t = hedgehogRef.current.translation();
+        currentPosition.current.set(t.x, t.y, t.z);
+
+        if (!initialised.current) {
+            smoothedTarget.current.copy(currentPosition.current);
+            controls.target.copy(currentPosition.current);
+            state.camera.position.copy(currentPosition.current).add(INITIAL_CAMERA_OFFSET);
+            initialised.current = true;
+        }
+
+        const alpha = 1 - Math.exp(-5 * delta);
+        smoothedTarget.current.lerp(currentPosition.current, alpha);
+
+        frameDelta.current.copy(smoothedTarget.current).sub(controls.target);
+        controls.target.add(frameDelta.current);
+        state.camera.position.add(frameDelta.current);
+
+        controls.update();
     });
 
     // Handle The collisions between the hedgehog and the apples.
@@ -152,7 +171,6 @@ export default function Hedgehog() {
             console.log("Switching apples to delivered");
             applesSwitchCarriedToDelivered(appleRefs.current);
         }
-
     };
 
     return (
