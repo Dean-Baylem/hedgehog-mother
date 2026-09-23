@@ -6,6 +6,7 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { RapierRigidBody, CollisionPayload } from "@react-three/rapier";
 import { useGameStore } from "../../store/gameStore";
 import CarriedApple from "../apple/CarriedApple";
+import findTargetTree from "../../utils/findTargetTree";
 
 const appleSlots: [number, number, number][] = [
     [0.06, 0.28, 0.08],
@@ -26,7 +27,7 @@ export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
     const appleRefs = useRef<Record<number, THREE.Group>>({});
-    const { closeTreeId, hitTree, apples, attachAppleToHedgehog, applesSwitchCarriedToDelivered } = useGameStore();
+    const { apples, attachAppleToHedgehog, applesSwitchCarriedToDelivered } = useGameStore();
 
     // Hedgehog Details
     const rotationY = useRef(Math.PI);
@@ -44,52 +45,22 @@ export default function Hedgehog() {
     // Keyboard
     const [subscribe, get] = useKeyboardControls();
 
-    const isFacingTree = (treeId: number) => {
-        const tree = useGameStore.getState().trees[treeId];
-        if (!tree) return false;
-
-        const hedgehogPosition = hedgehogRef.current?.translation();
-        if (!hedgehogPosition) return false;
-
-        const treePosition = new THREE.Vector3(...tree.position);
-        const directionToTree = treePosition.clone().sub(hedgehogPosition).normalize();
-        const hedgehogDirection = new THREE.Vector3(1, 0, 0).applyQuaternion(hedgehogRef.current?.rotation() || new THREE.Quaternion());
-
-        return directionToTree.dot(hedgehogDirection) > 0.8;
-    };
-
-    /**
-     * Attempt to hit the closest tree.
-     */
-    const attemptTreeHit = () => {
-        const tree = useGameStore.getState().trees[closeTreeId];
-
-        if (!tree) return false;
-
-        const hitSuccessful = isFacingTree(closeTreeId);
-
-        if (hitSuccessful) {
-            hitTree(closeTreeId);
-        }
-
-        return hitSuccessful;
-    };
-
-    /**
-     * Keyboard subscription to listen for the "hit" action and attempt to hit the closest tree when pressed.
-     */
     useEffect(() => {
-        const unsubscribe = subscribe(
+        return subscribe(
             (state) => state.hit,
             (pressed) => {
-                if (pressed) {
-                    attemptTreeHit();
-                }
+                if (!pressed || !hedgehogRef.current) return;
+
+                const p = hedgehogRef.current.translation();
+                // (1,0,0) rotated by rotationY around the Y axis
+                const forward = { x: Math.cos(rotationY.current), z: -Math.sin(rotationY.current) };
+
+                const { trees, hitTree } = useGameStore.getState();
+                const treeId = findTargetTree(trees, p, forward);
+                if (treeId !== null) hitTree(treeId);
             },
         );
-
-        return unsubscribe;
-    }, [subscribe, closeTreeId]);
+    }, [subscribe]);
 
     // Movement
     useFrame((state, delta) => {
@@ -142,17 +113,14 @@ export default function Hedgehog() {
 
     // Handle The collisions between the hedgehog and the apples.
     const handleCollisionEnter = (event: CollisionPayload) => {
-        const carriedCount = Object.values(apples).filter((apple) => apple.state === "carried").length;
+        const userData = event.other.rigidBodyObject?.userData;
+        if (userData?.type !== "apple" || !userData.appleId) return;
+
+        const { apples, attachAppleToHedgehog } = useGameStore.getState();
+        const carriedCount = Object.values(apples).filter((a) => a.state === "carried").length;
         if (carriedCount >= appleSlots.length) return;
 
-        const otherBody = event.other.rigidBodyObject;
-
-        if (!otherBody) return;
-
-        const userData = otherBody.userData;
-        if (userData.type === "apple" && userData.appleId) {
-            attachAppleToHedgehog(userData.appleId, appleSlots[carriedCount]);
-        }
+        attachAppleToHedgehog(userData.appleId, appleSlots[carriedCount]);
     };
 
     const handleIntersectionEnter = (event: CollisionPayload) => {

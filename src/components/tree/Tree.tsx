@@ -35,27 +35,6 @@ export default function Tree({id, position}: {id: number, position: [number, num
         initialised.current = true;
     }, []);
 
-    const handleIntersectionEnter = (event: CollisionPayload) => {
-        const otherBody = event.other.rigidBodyObject;
-
-        if (!otherBody) return;
-
-        const userData = otherBody.userData as { type: string; treeId?: number };
-        if (userData.type !== "hedgehog") return;
-
-        setCloseTreeId(id);
-    }
-
-    const handleIntersectionExit = (event: CollisionPayload) => {
-        const otherBody = event.other.rigidBodyObject;
-
-        if (!otherBody) return;
-
-        const userData = otherBody.userData as { type: string; treeId?: number };
-        if (userData.type !== "hedgehog") return;
-        if (closeTreeId === id) setCloseTreeId(0);
-    }
-
     const vertices = [
         // base
         -0.5, 0, -0.5, 0.5, 0, -0.5, 0.5, 0, 0.5, -0.5, 0, 0.5,
@@ -93,14 +72,6 @@ export default function Tree({id, position}: {id: number, position: [number, num
                     receiveShadow
                 />
             </group>
-            <CuboidCollider
-                name={`tree-sensor-${id}`}
-                args={[0.8, 0.2, 0.8]}
-                position={[0, 0.2, 0]}
-                onIntersectionEnter={handleIntersectionEnter}
-                onIntersectionExit={handleIntersectionExit}
-                sensor
-            />
             <CuboidCollider args={[0.5, 0.2, 0.5]} position={[0, 0.2, 0]} />
             <ConvexHullCollider args={[vertices]} position={[0, 0.35, 0]}/>
         </RigidBody>
