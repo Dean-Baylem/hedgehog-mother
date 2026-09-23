@@ -9,7 +9,7 @@ import generateTreePositions from "./utils//generateTreePositions";
 
 export default function Experience() {
     const apples = useGameStore((state) => state.apples);
-    const treePositions = generateTreePositions(25, 0.1, 0.5, 3, 1, [{ x: 9, z: 1, radius: 0.5 }]);
+    const treePositions = generateTreePositions(24, 1.0, 0.4, 3, 1.2, [{ x: 9, z: 1, radius: 3.0 }]);
     console.log(treePositions);
 
     return (
@@ -49,9 +49,8 @@ export default function Experience() {
                         <meshStandardMaterial color="greenyellow" />
                     </mesh>
                 </RigidBody>
-                {/* Hedgehog */}
-                <Hedgehog />
-                {/* Tree */}
+
+                {/* Trees */}
                 {/* <Tree
                     id={1}
                     position={[5, 0, 5]}
@@ -67,6 +66,7 @@ export default function Experience() {
                         position={pos}
                     />
                 ))}
+
                 {/* Apples */}
                 {Object.values(apples)
                     .filter((apple) => apple.state === "attached" || apple.state === "falling" || apple.state === "floor")
@@ -76,8 +76,12 @@ export default function Experience() {
                             id={apple.id}
                         />
                     ))}
+
                 {/* Burrow */}
                 <Burrow position={[9, 0, 1]} />
+
+                {/* Hedgehog */}
+                <Hedgehog />
             </Physics>
         </>
     );

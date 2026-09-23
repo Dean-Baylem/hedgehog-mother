@@ -96,7 +96,6 @@ export const useGameStore = create<GameStore>((set) => ({
     attachAppleToHedgehog: (appleId: number, position: [number, number, number]) =>
         set((state) => {
             const apple = state.apples[appleId];
-            console.log("Hello?");
             if (!apple) return state;
             return {
                 apples: {

@@ -20,7 +20,7 @@ type OrbitControlsLike = {
     enabled: boolean;
 };
 
-const INITIAL_CAMERA_OFFSET = new THREE.Vector3(-4, 10, 8);
+const INITIAL_CAMERA_OFFSET = new THREE.Vector3(8, 5, 0);
 
 export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
@@ -29,7 +29,7 @@ export default function Hedgehog() {
     const { closeTreeId, hitTree, apples, attachAppleToHedgehog, applesSwitchCarriedToDelivered } = useGameStore();
 
     // Hedgehog Details
-    const rotationY = useRef(0);
+    const rotationY = useRef(Math.PI);
     const quaternion = useRef(new THREE.Quaternion());
     const direction = useRef(new THREE.Vector3());
     const velocity = useRef(new THREE.Vector3());
@@ -163,12 +163,7 @@ export default function Hedgehog() {
         const userData = otherBody.userData as { type: string };
         if (userData.type !== "burrow") return;
 
-        console.log("Entered the burrow area");
-
-        console.log(appleRefs.current);
-
         if (Object.values(appleRefs.current).length > 0) {
-            console.log("Switching apples to delivered");
             applesSwitchCarriedToDelivered(appleRefs.current);
         }
     };
@@ -183,6 +178,8 @@ export default function Hedgehog() {
             angularDamping={4}
             enabledRotations={[false, true, false]}
             userData={{ type: "hedgehog" }}
+            position={[7.5, 0, 1]}
+            rotation={[0, Math.PI, 0]}
         >
             <primitive
                 object={scene}
