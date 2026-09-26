@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import * as THREE from "three";
 import getRandomAppleColor from "../utils/getRandomAppleColor";
+import generateTreePositions from "../utils/generateTreePositions";
+import { BURROW_POSITION } from "../constants";
 
 interface Tree {
     id: number;
@@ -20,7 +22,6 @@ interface Apple {
 interface GameStore {
     // Trees
     trees: Record<number, Tree>;
-    registerTree: (id: number, position: [number, number, number]) => void;
     hitTree: (treeId: number) => void;
 
     // Apples
@@ -32,21 +33,16 @@ interface GameStore {
     applesSwitchCarriedToDelivered: (appleRefs: Record<number, THREE.Group>) => void;
 }
 
+const initialTrees: Record<number, Tree> = Object.fromEntries(
+    generateTreePositions(24, 1.0, 0.4, 3, 1.2, [{ x: BURROW_POSITION[0], z: BURROW_POSITION[2], radius: 3 }]).map((position, id) => [
+        id,
+        { id, position },
+    ]),
+);
+
 export const useGameStore = create<GameStore>((set) => ({
     // Trees
-    trees: {},
-    registerTree: (id, position) =>
-        set((state) => {
-            if (state.trees[id]) return state;
-
-            return {
-                trees: {
-                    ...state.trees,
-                    [id]: { id, position },
-                },
-            };
-        }),
-
+    trees: initialTrees,
     hitTree: (treeId: number) =>
         set((state) => {
             const apple = Object.values(state.apples).find((apple) => apple.treeId === treeId && apple.state === "attached");

@@ -9,7 +9,7 @@ export default function Tree({id, position}: {id: number, position: [number, num
     const { nodes } = useGLTF("/models/trees/tree1.glb");
     const trunk = nodes.CommonTree_2.children[0] as THREE.Mesh;
     const leaves = nodes.CommonTree_2.children[1] as THREE.Mesh;
-    const { registerTree, registerApple, setCloseTreeId, closeTreeId } = useGameStore();
+    const registerApple = useGameStore((s) => s.registerApple);
     const initialised = useRef(false);
 
     // Create random apple positions
@@ -25,13 +25,8 @@ export default function Tree({id, position}: {id: number, position: [number, num
 
     // Id & Position static for tree's lifetime.
     useEffect(() => {
-        registerTree(id, position);
         if (initialised.current) return;
-
-        attachPositions.forEach((pos) => {
-            registerApple(id, pos);
-        });
-
+        attachPositions.forEach((pos) => registerApple(id, pos));
         initialised.current = true;
     }, []);
 
@@ -42,8 +37,6 @@ export default function Tree({id, position}: {id: number, position: [number, num
         // apex
         0, 2.0, 0.2,
     ];
-
-    console.log(id);
 
     return (
         <RigidBody

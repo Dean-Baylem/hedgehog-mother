@@ -4,7 +4,6 @@ import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { useGameStore } from "../../store/gameStore";
 import DeliveredApple from "../apple/DeliveredApple";
-import { useControls } from "leva";
 
 export default function Burrow({ position }: { position: [number, number, number] }) {
     const { scene } = useGLTF("/models/burrow/burrow.glb");

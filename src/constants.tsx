@@ -1,0 +1,1 @@
+export const BURROW_POSITION: [number, number, number] = [9, 0, 1];

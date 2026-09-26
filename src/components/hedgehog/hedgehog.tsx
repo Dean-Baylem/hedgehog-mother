@@ -27,7 +27,7 @@ export default function Hedgehog() {
     const { scene } = useGLTF("/models/hedgehog/hedgehog.glb");
     const hedgehogRef = useRef<RapierRigidBody>(null);
     const appleRefs = useRef<Record<number, THREE.Group>>({});
-    const { apples, attachAppleToHedgehog, applesSwitchCarriedToDelivered } = useGameStore();
+    const { apples, applesSwitchCarriedToDelivered } = useGameStore();
 
     // Hedgehog Details
     const rotationY = useRef(Math.PI);
